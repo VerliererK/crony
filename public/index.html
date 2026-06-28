@@ -98,6 +98,17 @@
       padding: 2px 4px 0px;
       margin-left: 2rem;
     }
+
+    .url-link {
+      color: inherit;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .url-link:hover {
+      color: #39d2b4;
+      text-decoration: underline;
+    }
   </style>
 </head>
 
@@ -133,12 +144,41 @@
       document.querySelectorAll("button, input").forEach(el => { el.disabled = show; });
     }
 
-    function selectUrlText(element) {
-      const range = document.createRange();
-      range.selectNodeContents(element);
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
+    function getCopyableUrl(url) {
+      try {
+        return new URL(url, window.location.origin).href;
+      } catch {
+        return url;
+      }
+    }
+
+    async function copyText(text) {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+        return;
+      }
+
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    async function copyUrl(url) {
+      await copyText(getCopyableUrl(url));
+    }
+
+    async function handleUrlClick(event, url) {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+
+      event.preventDefault();
+      await copyUrl(url);
     }
 
     function updateUI(list) {
@@ -159,8 +199,13 @@
         label.className = "form-check-label";
         label.style.opacity = "1";
 
-        const urlText = document.createElement('span');
-        urlText.onclick = () => selectUrlText(urlText);
+        const urlText = document.createElement('a');
+        urlText.className = "url-link";
+        urlText.href = getCopyableUrl(url);
+        urlText.target = "_blank";
+        urlText.rel = "noopener noreferrer";
+        urlText.onclick = (event) => handleUrlClick(event, url);
+        urlText.title = "Click to copy, long press to open";
         urlText.textContent = url;
 
         const intervalText = document.createElement('span');
