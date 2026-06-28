@@ -10,3 +10,20 @@ export const fetchTimeout = async (input: FetchInput, timeout = 5000, init?: Fet
     clearTimeout(id);
   }
 };
+
+type NotificationEnv = CloudflareBindings & {
+  NTFY_TOPIC_URL?: string;
+};
+
+export const ntfyNotify = async (env: NotificationEnv, text: string) => {
+  const url = env.NTFY_TOPIC_URL?.trim();
+  if (!url) return;
+
+  const res = await fetch(url, {
+    method: "POST",
+    body: text,
+  });
+  if (!res.ok) {
+    console.error(`ntfy failed: ${res.status} ${res.statusText} - ${await res.text()}`);
+  }
+};

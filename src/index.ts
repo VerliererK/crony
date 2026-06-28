@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { getJobs, setJob, deleteJob, getActionText, setActionText } from "./lib/kv";
 import type { Job } from "./lib/kv";
-import { fetchTimeout } from "./lib/utils";
+import { fetchTimeout, ntfyNotify } from "./lib/utils";
 import jpy from "./api/jpy";
 import freeios from "./api/freeios";
 
@@ -14,6 +14,7 @@ for (const [name, callback] of Object.entries({ jpy, freeios })) {
     const { update_text, needs_update } = await callback(lastText || "");
     if (needs_update) {
       await setActionText(c.env.CRONY_KV, name, update_text);
+      await ntfyNotify(c.env, update_text);
     }
     return c.text(update_text || "");
   });
