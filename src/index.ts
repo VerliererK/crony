@@ -49,12 +49,12 @@ function filterJobs(jobs: Job[], timestamp: number): Job[] {
   });
 }
 
-async function runJob(job: Job): Promise<void> {
+async function runJob(env: CloudflareBindings, job: Job): Promise<void> {
   const { url } = job;
   console.log(`fetch: ${url}`);
 
   if (url.startsWith("/")) {
-    await app.request(url);
+    await app.request(url, undefined, env);
   } else {
     await fetchTimeout(url, 1000).catch(_ => { });
   }
@@ -63,7 +63,7 @@ async function runJob(job: Job): Promise<void> {
 async function runJobs(env: CloudflareBindings, timestamp: number): Promise<void> {
   const jobs = await getJobs(env.CRONY_KV);
   const filteredJobs = filterJobs(jobs, timestamp);
-  await Promise.all(filteredJobs.map(runJob));
+  await Promise.all(filteredJobs.map((job) => runJob(env, job)));
 }
 
 export default {
