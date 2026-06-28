@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Crony">
+  <rect width="64" height="64" rx="14" fill="#111827"/>
+  <circle cx="32" cy="32" r="20" fill="none" stroke="#39d2b4" stroke-width="5"/>
+  <path d="M32 18v14l10 6" fill="none" stroke="#e5e7eb" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 7v10M32 47v10M7 32h10M47 32h10" stroke="#39d2b4" stroke-width="4" stroke-linecap="round"/>
+  <path d="M21 21l22 22M43 21L21 43" stroke="#39d2b4" stroke-width="3" stroke-linecap="round" opacity=".28"/>
+</svg>
