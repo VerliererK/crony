@@ -17,6 +17,12 @@
 	"upload_source_maps": true,
 	"compatibility_flags": [
 		"nodejs_compat"
+	],
+	"kv_namespaces": [
+		{
+			"binding": "CRONY_KV",
+			"id": "2e1caa68cdf2494c81fea7b87c8aaa5c"
+		}
 	]
 	/**
 	 * Smart Placement
