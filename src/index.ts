@@ -1,10 +1,25 @@
 import { Hono } from "hono";
-import { getJobs, setJob, deleteJob } from "./lib/kv";
+import { getJobs, setJob, deleteJob, getActionText, setActionText } from "./lib/kv";
 import type { Job } from "./lib/kv";
 import { fetchTimeout } from "./lib/utils";
+import jpy from "./api/jpy";
+import freeios from "./api/freeios";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
+// --- Actions API ---
+for (const [name, callback] of Object.entries({ jpy, freeios })) {
+  app.get(`/${name}`, async (c) => {
+    const lastText = await getActionText(c.env.CRONY_KV, name);
+    const { update_text, needs_update } = await callback(lastText || "");
+    if (needs_update) {
+      await setActionText(c.env.CRONY_KV, name, update_text);
+    }
+    return c.text(update_text || "");
+  });
+}
+
+// --- Jobs Management API ---
 app.get("/api/jobs", async (c) => {
   const jobs = await getJobs(c.env.CRONY_KV);
   return c.json(jobs);

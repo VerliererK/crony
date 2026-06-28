@@ -30,3 +30,13 @@ export const deleteJob = async (KV_BINDING: KVNamespace, jobUrl: string) => {
   const updatedJobs = jobs.filter((job) => job.url !== jobUrl);
   return KV_BINDING.put(JOBS_KEY, JSON.stringify(updatedJobs));
 };
+
+export const getActionText = async (KV_BINDING: KVNamespace, action: string) => {
+  const key = `actions:${action}:text`;
+  return KV_BINDING.get(key);
+};
+
+export const setActionText = async (KV_BINDING: KVNamespace, action: string, text: string) => {
+  const key = `actions:${action}:text`;
+  return KV_BINDING.put(key, text);
+};
