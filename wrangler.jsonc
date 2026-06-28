@@ -23,7 +23,12 @@
 			"binding": "CRONY_KV",
 			"id": "2e1caa68cdf2494c81fea7b87c8aaa5c"
 		}
-	]
+	],
+	"triggers": {
+		"crons": [
+			"* * * * *"
+		]
+	}
 	/**
 	 * Smart Placement
 	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement

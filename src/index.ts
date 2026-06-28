@@ -1,5 +1,7 @@
 import { Hono } from "hono";
 import { getJobs, setJob, deleteJob } from "./lib/kv";
+import type { Job } from "./lib/kv";
+import { fetchTimeout } from "./lib/utils";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -20,4 +22,38 @@ app.delete("/api/jobs", async (c) => {
   return c.json({ message: "Job deleted successfully" });
 });
 
-export default app;
+function filterJobs(jobs: Job[], timestamp: number): Job[] {
+  return jobs.filter((job) => {
+    if (!job.enabled) return false;
+
+    if (job.interval <= 1) return true;
+
+    const date = new Date(timestamp);
+    const utcMinutesOfDay = date.getUTCHours() * 60 + date.getUTCMinutes();
+    return utcMinutesOfDay % job.interval === 0;
+  });
+}
+
+async function runJob(job: Job): Promise<void> {
+  const { url } = job;
+  console.log(`fetch: ${url}`);
+
+  if (url.startsWith("/")) {
+    await app.request(url);
+  } else {
+    await fetchTimeout(url, 1000).catch(_ => { });
+  }
+}
+
+async function runJobs(env: CloudflareBindings, timestamp: number): Promise<void> {
+  const jobs = await getJobs(env.CRONY_KV);
+  const filteredJobs = filterJobs(jobs, timestamp);
+  await Promise.all(filteredJobs.map(runJob));
+}
+
+export default {
+  fetch: app.fetch,
+  scheduled(event, env, ctx) {
+    ctx.waitUntil(runJobs(env, event.scheduledTime));
+  },
+} satisfies ExportedHandler<CloudflareBindings>;

@@ -1,4 +1,4 @@
-type Job = {
+export type Job = {
   url: string;
   interval: number;
   enabled: boolean;
