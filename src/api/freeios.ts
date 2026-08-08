@@ -3,6 +3,12 @@ const URLS = [
   "https://mrmad.com.tw/category/3c-information/free-app/",
 ]
 
+// 去重基準來自 `actions:freeios:text` 的既有內容：每行一個標題。
+// 修改 update_text 格式時，務必同步調整 getSeenTitles 的解析。
+const getSeenTitles = (lastText: string): Set<string> => {
+  return new Set(lastText.split("\n").map(line => line.trim()).filter(Boolean));
+};
+
 export default async (text: string) => {
   const taiwanDate = new Date().toLocaleDateString("zh-TW", { timeZone: "Asia/Taipei", year: "numeric", month: "2-digit", day: "2-digit" });
   const get1 = fetch(URLS[0]).then(response => response.text()).then(html => {
@@ -36,9 +42,14 @@ export default async (text: string) => {
   const [apps1, apps2] = await Promise.all([get1, get2]);
   const apps = [...apps1, ...apps2].sort((b, a) => new Date(a.date).getTime() - new Date(b.date).getTime());
   const latestApps = apps.filter(app => new Date(app.date) >= new Date(taiwanDate));
-  if (latestApps.length === 0) return { update_text: text, needs_update: false };
 
-  const update_text = `${taiwanDate}\n` + latestApps.map(app => app.title).join("\n");
-  const needs_update = update_text !== text;
-  return { update_text, needs_update };
+  const seenTitles = getSeenTitles(text);
+  const newApps = latestApps.filter(app => !seenTitles.has(app.title));
+  if (newApps.length === 0) return { update_text: text, needs_update: false };
+
+  // update_text 存當天完整清單（供 GET 顯示與下次去重），
+  // notification_text 只含本次真正新增的標題。
+  const update_text = latestApps.map(app => app.title).join("\n");
+  const notification_text = newApps.map(app => app.title).join("\n\n");
+  return { update_text, needs_update: true, notification_text };
 };

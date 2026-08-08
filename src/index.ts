@@ -8,13 +8,20 @@ import freeios from "./api/freeios";
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
 // --- Actions API ---
-for (const [name, callback] of Object.entries({ jpy, freeios })) {
+type ActionResult = {
+  update_text: string;
+  needs_update: boolean;
+  notification_text?: string;
+};
+
+const actions: Record<string, (lastText: string) => Promise<ActionResult>> = { jpy, freeios };
+for (const [name, callback] of Object.entries(actions)) {
   app.get(`/${name}`, async (c) => {
     const lastText = await getActionText(c.env.CRONY_KV, name);
-    const { update_text, needs_update } = await callback(lastText || "");
+    const { update_text, needs_update, notification_text } = await callback(lastText || "");
     if (needs_update) {
       await setActionText(c.env.CRONY_KV, name, update_text);
-      await ntfyNotify(c.env, update_text);
+      await ntfyNotify(c.env, notification_text ?? update_text);
     }
     return c.text(update_text || "");
   });
